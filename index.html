@@ -256,6 +256,11 @@
     .action-btn:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text); }
     .action-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
     .action-btn.success { border-color: rgba(74,222,128,.35); color: #4ade80; }
+    .action-btn.reading {
+      border-color: rgba(255,45,45,.35); color: var(--red);
+      background: rgba(255,45,45,.08);
+      animation: speakPulse 1s ease-in-out infinite;
+    }
 
     /* header row 2 — search bar */
     .search-bar-wrap {
@@ -287,7 +292,7 @@
     .transcript-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
 
     .transcript-line {
-      display: flex; align-items: baseline; gap: 16px;
+      display: flex; align-items: center; gap: 16px;
       padding: 8px 22px;
       transition: background .12s, opacity .2s;
     }
@@ -296,10 +301,34 @@
     .line-num {
       font-size: .72rem; color: var(--text-subtle);
       font-variant-numeric: tabular-nums;
-      min-width: 28px; text-align: right; flex-shrink: 0; padding-top: 2px;
+      min-width: 28px; text-align: right; flex-shrink: 0;
     }
-    .line-text { font-size: .945rem; color: #d4d4d4; line-height: 1.65; }
+    .line-text { font-size: .945rem; color: #d4d4d4; line-height: 1.65; flex: 1; }
     .transcript-line:hover .line-text { color: var(--text); }
+
+    /* ── Speak button ──────────────────────────── */
+    .speak-btn {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px;
+      background: transparent; border: none; border-radius: 8px;
+      color: var(--text-subtle); cursor: pointer;
+      opacity: 0; transition: opacity .15s, color .15s, background .15s;
+    }
+    .speak-btn svg { width: 15px; height: 15px; }
+    .transcript-line:hover .speak-btn { opacity: 1; }
+    .speak-btn:hover { background: rgba(255,255,255,.07); color: var(--text-muted); }
+    .speak-btn.speaking {
+      opacity: 1;
+      color: var(--red);
+      background: rgba(255,45,45,.1);
+      animation: speakPulse 1s ease-in-out infinite;
+    }
+    @keyframes speakPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(255,45,45,.3); }
+      50%      { box-shadow: 0 0 0 5px rgba(255,45,45,0); }
+    }
+    .transcript-line.active-line { background: rgba(255,45,45,.04); }
 
     mark.hl {
       background: rgba(251,191,36,.22);
@@ -383,6 +412,14 @@
         </div>
       </div>
       <div class="header-actions">
+        <button class="action-btn" id="read-all-btn" onclick="toggleReadAll(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+          Read Aloud
+        </button>
         <button class="action-btn" id="copy-btn" onclick="copyTranscript()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="9" y="9" width="13" height="13" rx="2"/>
@@ -505,6 +542,13 @@
       `<div class="transcript-line" data-idx="${i}">
         <span class="line-num">${i + 1}</span>
         <span class="line-text">${escHtml(line)}</span>
+        <button class="speak-btn" onclick="speakLine(${i}, this)" title="Read aloud">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path class="wave2" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+        </button>
       </div>`
     ).join("");
 
@@ -578,6 +622,80 @@
     });
     a.click();
     URL.revokeObjectURL(a.href);
+  }
+
+  /* ── Read Aloud (full transcript) ── */
+  let readAllActive = false;
+  let readAllIndex = 0;
+
+  function toggleReadAll(btn) {
+    if (readAllActive) { stopReadAll(); return; }
+    window.speechSynthesis.cancel();
+    readAllActive = true;
+    readAllIndex = 0;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop`;
+    btn.classList.add("reading");
+    readNext();
+  }
+
+  function readNext() {
+    if (!readAllActive || readAllIndex >= allLines.length) { stopReadAll(); return; }
+
+    document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
+    const lineEl = document.querySelector(`.transcript-line[data-idx="${readAllIndex}"]`);
+    if (lineEl) {
+      lineEl.classList.add("active-line");
+      lineEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
+    const utterance = new SpeechSynthesisUtterance(allLines[readAllIndex]);
+    utterance.onend = () => { readAllIndex++; readNext(); };
+    utterance.onerror = () => stopReadAll();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function stopReadAll() {
+    readAllActive = false;
+    window.speechSynthesis.cancel();
+    document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
+    const btn = document.getElementById("read-all-btn");
+    if (btn) {
+      btn.classList.remove("reading");
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> Read Aloud`;
+    }
+  }
+
+  /* ── Speak single line ── */
+  let activeSpeakBtn = null;
+
+  function speakLine(idx, btn) {
+    stopReadAll();
+    window.speechSynthesis.cancel();
+
+    if (activeSpeakBtn === btn) {
+      btn.classList.remove("speaking");
+      btn.closest(".transcript-line").classList.remove("active-line");
+      activeSpeakBtn = null;
+      return;
+    }
+
+    if (activeSpeakBtn) {
+      activeSpeakBtn.classList.remove("speaking");
+      activeSpeakBtn.closest(".transcript-line").classList.remove("active-line");
+    }
+
+    const line = btn.closest(".transcript-line");
+    btn.classList.add("speaking");
+    line.classList.add("active-line");
+    activeSpeakBtn = btn;
+
+    const utterance = new SpeechSynthesisUtterance(allLines[idx]);
+    utterance.onend = utterance.onerror = () => {
+      btn.classList.remove("speaking");
+      line.classList.remove("active-line");
+      if (activeSpeakBtn === btn) activeSpeakBtn = null;
+    };
+    window.speechSynthesis.speak(utterance);
   }
 
   /* ── Helpers ── */
