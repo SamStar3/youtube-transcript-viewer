@@ -67,5 +67,24 @@ def transcript():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/translate")
+def translate():
+    text = request.args.get("text", "").strip()
+    src  = request.args.get("src", "en")
+    tgt  = request.args.get("tgt", "es")
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+    try:
+        resp = requests.get(
+            "https://api.mymemory.translated.net/get",
+            params={"q": text, "langpair": f"{src}|{tgt}"},
+            timeout=8
+        ).json()
+        translated = resp["responseData"]["translatedText"]
+        return jsonify({"translated": translated})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
