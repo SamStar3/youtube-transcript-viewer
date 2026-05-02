@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Transcript Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red: #ff2d2d;
+      --red-dark: #cc1f1f;
+      --red-glow: rgba(255, 45, 45, 0.22);
+      --bg: #0d0d0d;
+      --surface: #171717;
+      --surface-2: #1f1f1f;
+      --surface-3: #252525;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.13);
+      --text: #f0f0f0;
+      --text-muted: #777;
+      --text-subtle: #3f3f3f;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Hero ──────────────────────────────────── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 72px 24px 80px;
+      text-align: center;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%,
+        rgba(255,45,45,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(255,45,45,0.1);
+      border: 1px solid rgba(255,45,45,0.25);
+      border-radius: 99px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ff6b6b;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:.4; transform:scale(.7); }
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.25rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 30%, #999 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--red) 0%, #ff8c42 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Container ─────────────────────────────── */
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    /* ── Search card ───────────────────────────── */
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+      transition: border-color .3s, box-shadow .3s;
+    }
+    .search-card:focus-within {
+      border-color: rgba(255,45,45,.35);
+      box-shadow: 0 0 0 1px rgba(255,45,45,.12), 0 8px 40px rgba(0,0,0,.4);
+    }
+    .input-wrap { display: flex; gap: 10px; align-items: center; }
+    .input-icon {
+      flex-shrink: 0; width: 20px; height: 20px;
+      color: var(--text-subtle); transition: color .2s;
+    }
+    .search-card:focus-within .input-icon { color: var(--red); }
+    input[type="text"] {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: inherit; font-size: .97rem; color: var(--text);
+      caret-color: var(--red);
+    }
+    input[type="text"]::placeholder { color: var(--text-subtle); }
+    .divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+    .fetch-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      background: var(--red); color: #fff; border: none;
+      border-radius: 12px; font-family: inherit; font-size: .9rem;
+      font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: background .2s, transform .15s, box-shadow .2s; flex-shrink: 0;
+    }
+    .fetch-btn:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 20px var(--red-glow); }
+    .fetch-btn:active { transform: translateY(0); }
+    .fetch-btn:disabled { background: #3a1a1a; color: #7a4a4a; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Preview card ──────────────────────────── */
+    .preview-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      animation: fadeUp .3s ease;
+      overflow: hidden;
+    }
+    .preview-thumb-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 148px; height: 84px;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface-2);
+    }
+    .preview-thumb-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .preview-play {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.35);
+    }
+    .preview-play svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
+    .preview-info { flex: 1; min-width: 0; }
+    .preview-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: .7rem; font-weight: 700; color: var(--red);
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .preview-badge svg { width: 12px; height: 12px; }
+    .preview-title {
+      font-size: .93rem; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .preview-channel { font-size: .8rem; color: var(--text-muted); }
+    .preview-skeleton .preview-title,
+    .preview-skeleton .preview-channel {
+      background: var(--surface-3);
+      border-radius: 6px; color: transparent;
+      animation: shimmer 1.4s ease infinite alternate;
+    }
+    .preview-skeleton .preview-title  { width: 70%; height: 14px; margin-bottom: 6px; }
+    .preview-skeleton .preview-channel { width: 40%; height: 12px; }
+    @keyframes shimmer {
+      from { opacity: .5; } to { opacity: 1; }
+    }
+
+    /* ── Status bar ────────────────────────────── */
+    .status-bar {
+      display: flex; align-items: center; gap: 10px;
+      min-height: 32px; padding: 0 4px;
+      font-size: .875rem;
+    }
+    .status-bar.loading { color: var(--text-muted); }
+    .status-bar.error   { color: #ff6b6b; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,45,45,.2);
+      border-top-color: var(--red);
+      border-radius: 50%;
+      animation: spin .7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result card ───────────────────────────── */
+    .result-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      animation: fadeUp .35s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* header row 1 — meta + actions */
+    .result-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .result-meta { display: flex; align-items: center; gap: 14px; }
+    .meta-pill {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .78rem; font-weight: 500; color: var(--text-muted);
+    }
+    .meta-pill svg { width: 13px; height: 13px; }
+    .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .action-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 13px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text-muted);
+      font-family: inherit; font-size: .8rem; font-weight: 500;
+      cursor: pointer; transition: all .2s; white-space: nowrap;
+    }
+    .action-btn:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text); }
+    .action-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .action-btn.success { border-color: rgba(74,222,128,.35); color: #4ade80; }
+
+    /* header row 2 — search bar */
+    .search-bar-wrap {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .search-bar-wrap svg { width: 15px; height: 15px; color: var(--text-subtle); flex-shrink: 0; }
+    #search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: inherit; font-size: .88rem; color: var(--text);
+      caret-color: var(--red);
+    }
+    #search-input::placeholder { color: var(--text-subtle); }
+    .match-count {
+      font-size: .75rem; font-weight: 500; color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .match-count.has-results { color: #fbbf24; }
+
+    /* ── Transcript lines ──────────────────────── */
+    .transcript-body {
+      max-height: 540px; overflow-y: auto; padding: 8px 0;
+      scrollbar-width: thin; scrollbar-color: #2a2a2a transparent;
+    }
+    .transcript-body::-webkit-scrollbar { width: 4px; }
+    .transcript-body::-webkit-scrollbar-track { background: transparent; }
+    .transcript-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+
+    .transcript-line {
+      display: flex; align-items: baseline; gap: 16px;
+      padding: 8px 22px;
+      transition: background .12s, opacity .2s;
+    }
+    .transcript-line:hover { background: rgba(255,255,255,.03); }
+    .transcript-line.dimmed { opacity: .15; }
+    .line-num {
+      font-size: .72rem; color: var(--text-subtle);
+      font-variant-numeric: tabular-nums;
+      min-width: 28px; text-align: right; flex-shrink: 0; padding-top: 2px;
+    }
+    .line-text { font-size: .945rem; color: #d4d4d4; line-height: 1.65; }
+    .transcript-line:hover .line-text { color: var(--text); }
+
+    mark.hl {
+      background: rgba(251,191,36,.22);
+      color: #fde68a;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-badge"><span class="dot"></span>Transcript Viewer</div>
+  <h1>Every word from<br><span>any YouTube video</span></h1>
+  <p>Paste a video link below and get the full spoken transcript in seconds.</p>
+</div>
+
+<div class="container">
+
+  <!-- Search card -->
+  <div class="search-card">
+    <div class="input-wrap">
+      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+        <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
+      </svg>
+      <input type="text" id="url-input" placeholder="Paste a YouTube URL here..." autocomplete="off" />
+      <div class="divider"></div>
+      <button class="fetch-btn" id="fetch-btn" onclick="fetchTranscript()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="5 3 19 12 5 21 5 3"/>
+        </svg>
+        Get Transcript
+      </button>
+    </div>
+  </div>
+
+  <!-- Video preview card -->
+  <div id="preview-card" class="preview-card" style="display:none">
+    <div class="preview-thumb-wrap">
+      <img id="preview-thumb" src="" alt="" />
+      <div class="preview-play">
+        <svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.5)"/><polygon points="10 8 16 12 10 16 10 8" fill="white"/></svg>
+      </div>
+    </div>
+    <div class="preview-info">
+      <div class="preview-badge">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/></svg>
+        YouTube
+      </div>
+      <div class="preview-title" id="preview-title"></div>
+      <div class="preview-channel" id="preview-channel"></div>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar" id="status"></div>
+
+  <!-- Result card -->
+  <div id="result-card" class="result-card" style="display:none">
+    <div class="result-header">
+      <div class="result-meta">
+        <div class="meta-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <span id="line-count">0 lines</span>
+        </div>
+        <div class="meta-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>
+          </svg>
+          <span id="word-count">0 words</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="action-btn" id="copy-btn" onclick="copyTranscript()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          Copy
+        </button>
+        <button class="action-btn" id="download-btn" onclick="downloadTranscript()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download .txt
+        </button>
+      </div>
+    </div>
+
+    <!-- Inline search -->
+    <div class="search-bar-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="Search within transcript..." oninput="searchTranscript()" />
+      <span class="match-count" id="match-count"></span>
+    </div>
+
+    <div class="transcript-body" id="transcript-body"></div>
+  </div>
+
+</div>
+
+<script>
+  let allLines = [];
+  let previewTimer = null;
+  let lastPreviewUrl = "";
+
+  /* ── URL input: debounced preview ── */
+  document.getElementById("url-input").addEventListener("input", () => {
+    clearTimeout(previewTimer);
+    const val = document.getElementById("url-input").value.trim();
+    if (!val) { hidePreview(); return; }
+    previewTimer = setTimeout(() => loadPreview(val), 600);
+  });
+
+  document.getElementById("url-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") fetchTranscript();
+  });
+
+  /* ── Video preview ── */
+  async function loadPreview(url) {
+    if (url === lastPreviewUrl) return;
+    lastPreviewUrl = url;
+
+    const card = document.getElementById("preview-card");
+    const titleEl = document.getElementById("preview-title");
+    const channelEl = document.getElementById("preview-channel");
+    const thumbEl = document.getElementById("preview-thumb");
+
+    // skeleton while loading
+    card.style.display = "flex";
+    card.classList.add("preview-skeleton");
+    titleEl.textContent = "Loading…";
+    channelEl.textContent = "…";
+    thumbEl.src = "";
+
+    try {
+      const res = await fetch("/video-info?url=" + encodeURIComponent(url));
+      const data = await res.json();
+      if (data.error) { hidePreview(); return; }
+      thumbEl.src = data.thumbnail;
+      titleEl.textContent = data.title;
+      channelEl.textContent = data.channel;
+      card.classList.remove("preview-skeleton");
+    } catch {
+      hidePreview();
+    }
+  }
+
+  function hidePreview() {
+    lastPreviewUrl = "";
+    document.getElementById("preview-card").style.display = "none";
+  }
+
+  /* ── Fetch transcript ── */
+  async function fetchTranscript() {
+    const url = document.getElementById("url-input").value.trim();
+    const btn = document.getElementById("fetch-btn");
+
+    if (!url) { setStatus("Please enter a YouTube URL.", "error"); return; }
+
+    btn.disabled = true;
+    document.getElementById("result-card").style.display = "none";
+    document.getElementById("search-input").value = "";
+    setStatus("Fetching transcript…", "loading");
+
+    try {
+      const res = await fetch("/transcript?url=" + encodeURIComponent(url));
+      const data = await res.json();
+      if (data.error) {
+        setStatus(data.error, "error");
+      } else {
+        renderTranscript(data.transcript);
+        setStatus("", "");
+      }
+    } catch {
+      setStatus("Network error — is the server running?", "error");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Render transcript ── */
+  function renderTranscript(lines) {
+    allLines = lines;
+    const body = document.getElementById("transcript-body");
+    const wordCount = lines.join(" ").split(/\s+/).filter(Boolean).length;
+
+    body.innerHTML = lines.map((line, i) =>
+      `<div class="transcript-line" data-idx="${i}">
+        <span class="line-num">${i + 1}</span>
+        <span class="line-text">${escHtml(line)}</span>
+      </div>`
+    ).join("");
+
+    document.getElementById("line-count").textContent =
+      lines.length.toLocaleString() + " line" + (lines.length !== 1 ? "s" : "");
+    document.getElementById("word-count").textContent =
+      wordCount.toLocaleString() + " word" + (wordCount !== 1 ? "s" : "");
+    document.getElementById("match-count").textContent = "";
+
+    document.getElementById("result-card").style.display = "block";
+  }
+
+  /* ── Search ── */
+  function searchTranscript() {
+    const query = document.getElementById("search-input").value.trim();
+    const lineEls = document.querySelectorAll(".transcript-line");
+    const countEl = document.getElementById("match-count");
+
+    if (!query) {
+      lineEls.forEach((el, i) => {
+        el.classList.remove("dimmed");
+        el.querySelector(".line-text").innerHTML = escHtml(allLines[i]);
+      });
+      countEl.textContent = "";
+      countEl.className = "match-count";
+      return;
+    }
+
+    let matches = 0;
+    lineEls.forEach((el, i) => {
+      const text = allLines[i];
+      if (text.toLowerCase().includes(query.toLowerCase())) {
+        matches++;
+        el.classList.remove("dimmed");
+        el.querySelector(".line-text").innerHTML = highlightText(text, query);
+      } else {
+        el.classList.add("dimmed");
+        el.querySelector(".line-text").innerHTML = escHtml(text);
+      }
+    });
+
+    countEl.textContent = matches ? `${matches} match${matches !== 1 ? "es" : ""}` : "No matches";
+    countEl.className = "match-count" + (matches ? " has-results" : "");
+
+    // scroll to first match
+    const first = document.querySelector(".transcript-line:not(.dimmed)");
+    if (first) first.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+
+  /* ── Copy ── */
+  function copyTranscript() {
+    navigator.clipboard.writeText(allLines.join("\n")).then(() => {
+      const btn = document.getElementById("copy-btn");
+      btn.classList.add("success");
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+      setTimeout(() => {
+        btn.classList.remove("success");
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+      }, 2000);
+    });
+  }
+
+  /* ── Download ── */
+  function downloadTranscript() {
+    const title = document.getElementById("preview-title").textContent || "transcript";
+    const safe = title.replace(/[^a-z0-9 _-]/gi, "").trim().replace(/\s+/g, "_") || "transcript";
+    const blob = new Blob([allLines.join("\n")], { type: "text/plain" });
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(blob),
+      download: safe + ".txt"
+    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  /* ── Helpers ── */
+  function escHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function highlightText(text, query) {
+    const parts = text.split(new RegExp(`(${escRegex(query)})`, "gi"));
+    return parts.map(p =>
+      p.toLowerCase() === query.toLowerCase()
+        ? `<mark class="hl">${escHtml(p)}</mark>`
+        : escHtml(p)
+    ).join("");
+  }
+
+  function escRegex(s) {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function setStatus(msg, type) {
+    const el = document.getElementById("status");
+    if (!msg) { el.innerHTML = ""; el.className = "status-bar"; return; }
+    el.innerHTML = (type === "loading" ? `<div class="spinner"></div>` : "") + `<span>${escHtml(msg)}</span>`;
+    el.className = "status-bar " + type;
+  }
+</script>
+
+</body>
+</html>
