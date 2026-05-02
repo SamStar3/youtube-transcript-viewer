@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Transcript Viewer</title>
+  <title>YouTube Transcript + Translator</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
     :root {
       --red: #ff2d2d;
       --red-dark: #cc1f1f;
-      --red-glow: rgba(255, 45, 45, 0.22);
+      --red-glow: rgba(255,45,45,0.22);
       --bg: #0d0d0d;
       --surface: #171717;
       --surface-2: #1f1f1f;
@@ -36,81 +36,64 @@
     .hero {
       position: relative;
       overflow: hidden;
-      padding: 72px 24px 80px;
+      padding: 56px 24px 64px;
       text-align: center;
     }
     .hero::before {
       content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% -10%,
-        rgba(255,45,45,0.18) 0%, transparent 70%);
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 90% 60% at 50% -10%, rgba(255,45,45,0.16) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      background: rgba(255,45,45,0.1);
-      border: 1px solid rgba(255,45,45,0.25);
-      border-radius: 99px;
-      padding: 5px 14px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      color: #ff6b6b;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,45,45,0.1); border: 1px solid rgba(255,45,45,0.25);
+      border-radius: 99px; padding: 5px 14px;
+      font-size: .78rem; font-weight: 600; color: #ff6b6b;
+      letter-spacing: .04em; text-transform: uppercase; margin-bottom: 20px;
     }
     .hero-badge .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--red);
+      width: 6px; height: 6px; border-radius: 50%; background: var(--red);
       animation: pulse 1.8s ease-in-out infinite;
     }
-    @keyframes pulse {
-      0%,100% { opacity:1; transform:scale(1); }
-      50%      { opacity:.4; transform:scale(.7); }
-    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
     .hero h1 {
-      font-size: clamp(2rem, 5vw, 3.25rem);
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #ffffff 30%, #999 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 16px;
+      font-size: clamp(1.8rem,4vw,2.9rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -.03em;
+      background: linear-gradient(135deg,#fff 30%,#999 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 14px;
     }
     .hero h1 span {
-      background: linear-gradient(135deg, var(--red) 0%, #ff8c42 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background: linear-gradient(135deg,var(--red) 0%,#ff8c42 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .hero p {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      max-width: 480px;
-      margin: 0 auto;
-      line-height: 1.6;
+    .hero p { font-size: 1rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── Split layout ──────────────────────────── */
+    .app-layout {
+      display: flex; gap: 20px; align-items: flex-start;
+      max-width: 1380px; margin: 0 auto; padding: 0 20px 80px;
+    }
+    .left-panel  { flex: 1; min-width: 0; }
+    .right-panel { width: 390px; flex-shrink: 0; position: sticky; top: 24px; }
+
+    @media (max-width: 960px) {
+      .app-layout { flex-direction: column; }
+      .right-panel { width: 100%; position: static; }
     }
 
-    /* ── Container ─────────────────────────────── */
-    .container {
-      max-width: 780px;
-      margin: 0 auto;
-      padding: 0 20px 80px;
+    /* ── Shared card shell ─────────────────────── */
+    .card-shell {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; overflow: hidden;
     }
 
     /* ── Search card ───────────────────────────── */
     .search-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px 22px;
-      margin-bottom: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 20px 22px; margin-bottom: 14px;
       transition: border-color .3s, box-shadow .3s;
     }
     .search-card:focus-within {
@@ -118,610 +101,754 @@
       box-shadow: 0 0 0 1px rgba(255,45,45,.12), 0 8px 40px rgba(0,0,0,.4);
     }
     .input-wrap { display: flex; gap: 10px; align-items: center; }
-    .input-icon {
-      flex-shrink: 0; width: 20px; height: 20px;
-      color: var(--text-subtle); transition: color .2s;
-    }
+    .input-icon { flex-shrink:0; width:20px; height:20px; color:var(--text-subtle); transition:color .2s; }
     .search-card:focus-within .input-icon { color: var(--red); }
     input[type="text"] {
       flex: 1; background: transparent; border: none; outline: none;
-      font-family: inherit; font-size: .97rem; color: var(--text);
-      caret-color: var(--red);
+      font-family: inherit; font-size: .97rem; color: var(--text); caret-color: var(--red);
     }
     input[type="text"]::placeholder { color: var(--text-subtle); }
-    .divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+    .divider { width:1px; height:24px; background:var(--border); flex-shrink:0; }
     .fetch-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 20px;
-      background: var(--red); color: #fff; border: none;
-      border-radius: 12px; font-family: inherit; font-size: .9rem;
-      font-weight: 600; cursor: pointer; white-space: nowrap;
-      transition: background .2s, transform .15s, box-shadow .2s; flex-shrink: 0;
+      display:flex; align-items:center; gap:8px; padding:10px 20px;
+      background:var(--red); color:#fff; border:none; border-radius:12px;
+      font-family:inherit; font-size:.9rem; font-weight:600; cursor:pointer;
+      white-space:nowrap; transition:background .2s,transform .15s,box-shadow .2s; flex-shrink:0;
     }
-    .fetch-btn:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 20px var(--red-glow); }
-    .fetch-btn:active { transform: translateY(0); }
-    .fetch-btn:disabled { background: #3a1a1a; color: #7a4a4a; cursor: not-allowed; transform: none; box-shadow: none; }
+    .fetch-btn:hover { background:var(--red-dark); transform:translateY(-1px); box-shadow:0 4px 20px var(--red-glow); }
+    .fetch-btn:active { transform:translateY(0); }
+    .fetch-btn:disabled { background:#3a1a1a; color:#7a4a4a; cursor:not-allowed; transform:none; box-shadow:none; }
 
     /* ── Preview card ──────────────────────────── */
     .preview-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px 18px;
-      margin-bottom: 14px;
-      animation: fadeUp .3s ease;
-      overflow: hidden;
+      display:flex; align-items:center; gap:16px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:16px; padding:14px 18px; margin-bottom:14px;
+      animation:fadeUp .3s ease; overflow:hidden;
     }
     .preview-thumb-wrap {
-      position: relative;
-      flex-shrink: 0;
-      width: 148px; height: 84px;
-      border-radius: 10px;
-      overflow: hidden;
-      background: var(--surface-2);
+      position:relative; flex-shrink:0; width:148px; height:84px;
+      border-radius:10px; overflow:hidden; background:var(--surface-2);
     }
-    .preview-thumb-wrap img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    .preview-thumb-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
     .preview-play {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0,0,0,.35);
+      position:absolute; inset:0; display:flex; align-items:center;
+      justify-content:center; background:rgba(0,0,0,.35);
     }
-    .preview-play svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
-    .preview-info { flex: 1; min-width: 0; }
+    .preview-play svg { width:28px; height:28px; filter:drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
+    .preview-info { flex:1; min-width:0; }
     .preview-badge {
-      display: inline-flex; align-items: center; gap: 5px;
-      font-size: .7rem; font-weight: 700; color: var(--red);
-      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:.7rem; font-weight:700; color:var(--red);
+      text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;
     }
-    .preview-badge svg { width: 12px; height: 12px; }
-    .preview-title {
-      font-size: .93rem; font-weight: 600; color: var(--text);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 4px;
-    }
-    .preview-channel { font-size: .8rem; color: var(--text-muted); }
+    .preview-badge svg { width:12px; height:12px; }
+    .preview-title { font-size:.93rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px; }
+    .preview-channel { font-size:.8rem; color:var(--text-muted); }
     .preview-skeleton .preview-title,
-    .preview-skeleton .preview-channel {
-      background: var(--surface-3);
-      border-radius: 6px; color: transparent;
-      animation: shimmer 1.4s ease infinite alternate;
-    }
-    .preview-skeleton .preview-title  { width: 70%; height: 14px; margin-bottom: 6px; }
-    .preview-skeleton .preview-channel { width: 40%; height: 12px; }
-    @keyframes shimmer {
-      from { opacity: .5; } to { opacity: 1; }
-    }
+    .preview-skeleton .preview-channel { background:var(--surface-3); border-radius:6px; color:transparent; animation:shimmer 1.4s ease infinite alternate; }
+    .preview-skeleton .preview-title  { width:70%; height:14px; margin-bottom:6px; }
+    .preview-skeleton .preview-channel { width:40%; height:12px; }
+    @keyframes shimmer { from{opacity:.5} to{opacity:1} }
 
-    /* ── Status bar ────────────────────────────── */
-    .status-bar {
-      display: flex; align-items: center; gap: 10px;
-      min-height: 32px; padding: 0 4px;
-      font-size: .875rem;
-    }
-    .status-bar.loading { color: var(--text-muted); }
-    .status-bar.error   { color: #ff6b6b; }
-    .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,45,45,.2);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin .7s linear infinite; flex-shrink: 0;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* ── Status ────────────────────────────────── */
+    .status-bar { display:flex; align-items:center; gap:10px; min-height:32px; padding:0 4px; font-size:.875rem; }
+    .status-bar.loading { color:var(--text-muted); }
+    .status-bar.error   { color:#ff6b6b; }
+    .spinner { width:16px; height:16px; border:2px solid rgba(255,45,45,.2); border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite; flex-shrink:0; }
+    @keyframes spin { to { transform:rotate(360deg); } }
 
     /* ── Result card ───────────────────────────── */
-    .result-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      overflow: hidden;
-      animation: fadeUp .35s ease;
-    }
-    @keyframes fadeUp {
-      from { opacity:0; transform:translateY(12px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
+    .result-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; animation:fadeUp .35s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-    /* header row 1 — meta + actions */
     .result-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface-2);
-      gap: 12px;
-      flex-wrap: wrap;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 20px; border-bottom:1px solid var(--border);
+      background:var(--surface-2); gap:12px; flex-wrap:wrap;
     }
-    .result-meta { display: flex; align-items: center; gap: 14px; }
-    .meta-pill {
-      display: flex; align-items: center; gap: 5px;
-      font-size: .78rem; font-weight: 500; color: var(--text-muted);
-    }
-    .meta-pill svg { width: 13px; height: 13px; }
-    .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .result-meta { display:flex; align-items:center; gap:14px; }
+    .meta-pill { display:flex; align-items:center; gap:5px; font-size:.78rem; font-weight:500; color:var(--text-muted); }
+    .meta-pill svg { width:13px; height:13px; }
+    .header-actions { display:flex; gap:8px; flex-shrink:0; }
     .action-btn {
-      display: flex; align-items: center; gap: 6px;
-      padding: 7px 13px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; color: var(--text-muted);
-      font-family: inherit; font-size: .8rem; font-weight: 500;
-      cursor: pointer; transition: all .2s; white-space: nowrap;
+      display:flex; align-items:center; gap:6px; padding:7px 13px;
+      background:var(--surface); border:1px solid var(--border); border-radius:10px;
+      color:var(--text-muted); font-family:inherit; font-size:.8rem; font-weight:500;
+      cursor:pointer; transition:all .2s; white-space:nowrap;
     }
-    .action-btn:hover { background: var(--surface-3); border-color: var(--border-hover); color: var(--text); }
-    .action-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
-    .action-btn.success { border-color: rgba(74,222,128,.35); color: #4ade80; }
+    .action-btn:hover { background:var(--surface-3); border-color:var(--border-hover); color:var(--text); }
+    .action-btn svg { width:13px; height:13px; flex-shrink:0; }
+    .action-btn.success { border-color:rgba(74,222,128,.35); color:#4ade80; }
     .action-btn.reading {
-      border-color: rgba(255,45,45,.35); color: var(--red);
-      background: rgba(255,45,45,.08);
-      animation: speakPulse 1s ease-in-out infinite;
+      border-color:rgba(255,45,45,.35); color:var(--red);
+      background:rgba(255,45,45,.08); animation:speakPulse 1s ease-in-out infinite;
     }
 
-    /* header row 2 — search bar */
     .search-bar-wrap {
-      display: flex; align-items: center; gap: 10px;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      display:flex; align-items:center; gap:10px; padding:12px 20px;
+      border-bottom:1px solid var(--border); background:var(--surface);
     }
-    .search-bar-wrap svg { width: 15px; height: 15px; color: var(--text-subtle); flex-shrink: 0; }
+    .search-bar-wrap svg { width:15px; height:15px; color:var(--text-subtle); flex-shrink:0; }
     #search-input {
-      flex: 1; background: transparent; border: none; outline: none;
-      font-family: inherit; font-size: .88rem; color: var(--text);
-      caret-color: var(--red);
+      flex:1; background:transparent; border:none; outline:none;
+      font-family:inherit; font-size:.88rem; color:var(--text); caret-color:var(--red);
     }
-    #search-input::placeholder { color: var(--text-subtle); }
-    .match-count {
-      font-size: .75rem; font-weight: 500; color: var(--text-muted);
-      white-space: nowrap;
-    }
-    .match-count.has-results { color: #fbbf24; }
+    #search-input::placeholder { color:var(--text-subtle); }
+    .match-count { font-size:.75rem; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+    .match-count.has-results { color:#fbbf24; }
 
     /* ── Transcript lines ──────────────────────── */
-    .transcript-body {
-      max-height: 540px; overflow-y: auto; padding: 8px 0;
-      scrollbar-width: thin; scrollbar-color: #2a2a2a transparent;
-    }
-    .transcript-body::-webkit-scrollbar { width: 4px; }
-    .transcript-body::-webkit-scrollbar-track { background: transparent; }
-    .transcript-body::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 4px; }
+    .transcript-body { max-height:520px; overflow-y:auto; padding:8px 0; scrollbar-width:thin; scrollbar-color:#2a2a2a transparent; }
+    .transcript-body::-webkit-scrollbar { width:4px; }
+    .transcript-body::-webkit-scrollbar-track { background:transparent; }
+    .transcript-body::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:4px; }
 
-    .transcript-line {
-      display: flex; align-items: center; gap: 16px;
-      padding: 8px 22px;
-      transition: background .12s, opacity .2s;
-    }
-    .transcript-line:hover { background: rgba(255,255,255,.03); }
-    .transcript-line.dimmed { opacity: .15; }
-    .line-num {
-      font-size: .72rem; color: var(--text-subtle);
-      font-variant-numeric: tabular-nums;
-      min-width: 28px; text-align: right; flex-shrink: 0;
-    }
-    .line-text { font-size: .945rem; color: #d4d4d4; line-height: 1.65; flex: 1; }
-    .transcript-line:hover .line-text { color: var(--text); }
+    .transcript-line { display:flex; align-items:center; gap:16px; padding:8px 22px; transition:background .12s,opacity .2s; }
+    .transcript-line:hover { background:rgba(255,255,255,.03); }
+    .transcript-line.dimmed { opacity:.15; }
+    .line-num { font-size:.72rem; color:var(--text-subtle); font-variant-numeric:tabular-nums; min-width:28px; text-align:right; flex-shrink:0; }
+    .line-text { font-size:.945rem; color:#d4d4d4; line-height:1.65; flex:1; }
+    .transcript-line:hover .line-text { color:var(--text); }
 
-    /* ── Speak button ──────────────────────────── */
     .speak-btn {
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      width: 28px; height: 28px;
-      background: transparent; border: none; border-radius: 8px;
-      color: var(--text-subtle); cursor: pointer;
-      opacity: 0; transition: opacity .15s, color .15s, background .15s;
+      flex-shrink:0; display:flex; align-items:center; justify-content:center;
+      width:28px; height:28px; background:transparent; border:none; border-radius:8px;
+      color:var(--text-subtle); cursor:pointer;
+      opacity:0; transition:opacity .15s,color .15s,background .15s;
     }
-    .speak-btn svg { width: 15px; height: 15px; }
-    .transcript-line:hover .speak-btn { opacity: 1; }
-    .speak-btn:hover { background: rgba(255,255,255,.07); color: var(--text-muted); }
-    .speak-btn.speaking {
-      opacity: 1;
-      color: var(--red);
-      background: rgba(255,45,45,.1);
-      animation: speakPulse 1s ease-in-out infinite;
-    }
-    @keyframes speakPulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(255,45,45,.3); }
-      50%      { box-shadow: 0 0 0 5px rgba(255,45,45,0); }
-    }
-    .transcript-line.active-line { background: rgba(255,45,45,.04); }
+    .speak-btn svg { width:15px; height:15px; }
+    .transcript-line:hover .speak-btn { opacity:1; }
+    .speak-btn:hover { background:rgba(255,255,255,.07); color:var(--text-muted); }
+    .speak-btn.speaking { opacity:1; color:var(--red); background:rgba(255,45,45,.1); animation:speakPulse 1s ease-in-out infinite; }
+    @keyframes speakPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,45,45,.3)} 50%{box-shadow:0 0 0 5px rgba(255,45,45,0)} }
+    .transcript-line.active-line { background:rgba(255,45,45,.04); }
 
-    mark.hl {
-      background: rgba(251,191,36,.22);
-      color: #fde68a;
-      border-radius: 3px;
-      padding: 0 2px;
+    mark.hl { background:rgba(251,191,36,.22); color:#fde68a; border-radius:3px; padding:0 2px; }
+
+    /* ── Translator card ───────────────────────── */
+    .translator-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; overflow:hidden; }
+
+    .translator-header {
+      display:flex; align-items:center; gap:10px;
+      padding:14px 20px; border-bottom:1px solid var(--border);
+      background:var(--surface-2);
+    }
+    .translator-header-icon { color:var(--red); display:flex; align-items:center; }
+    .translator-header-icon svg { width:17px; height:17px; }
+    .translator-header h2 { font-size:.9rem; font-weight:700; color:var(--text); }
+    .translator-header p  { font-size:.75rem; color:var(--text-muted); margin-left:auto; }
+
+    .lang-row {
+      display:flex; align-items:center; gap:8px;
+      padding:14px 18px; border-bottom:1px solid var(--border);
+    }
+    .lang-group { flex:1; min-width:0; }
+    .lang-label { font-size:.68rem; font-weight:600; color:var(--text-subtle); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+    .lang-select {
+      width:100%; background:var(--surface-2); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-family:inherit; font-size:.82rem;
+      padding:8px 10px; outline:none; cursor:pointer; appearance:none;
+      transition:border-color .2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+    .lang-select:focus { border-color:rgba(255,45,45,.35); }
+    .lang-arrow { color:var(--text-subtle); flex-shrink:0; display:flex; align-items:center; margin-top:16px; }
+    .lang-arrow svg { width:14px; height:14px; }
+
+    .input-section { padding:16px 18px; border-bottom:1px solid var(--border); }
+    .input-label { font-size:.72rem; font-weight:600; color:var(--text-subtle); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+
+    .textarea-wrap { position:relative; }
+    #translate-input {
+      width:100%; background:var(--surface-2); border:1px solid var(--border);
+      border-radius:12px; color:var(--text); font-family:inherit; font-size:.9rem;
+      line-height:1.65; padding:12px 14px 44px 14px;
+      min-height:130px; max-height:260px; resize:none; outline:none;
+      transition:border-color .2s; caret-color:var(--red);
+      scrollbar-width:thin; scrollbar-color:#2a2a2a transparent;
+    }
+    #translate-input:focus { border-color:rgba(255,45,45,.3); box-shadow:0 0 0 1px rgba(255,45,45,.08); }
+    #translate-input::placeholder { color:var(--text-subtle); }
+
+    .mic-btn {
+      position:absolute; bottom:10px; right:10px;
+      width:32px; height:32px; background:var(--surface-3); border:1px solid var(--border);
+      border-radius:9px; color:var(--text-muted); display:flex; align-items:center;
+      justify-content:center; cursor:pointer; transition:all .2s;
+    }
+    .mic-btn:hover { background:rgba(255,45,45,.1); border-color:rgba(255,45,45,.3); color:var(--red); }
+    .mic-btn.listening {
+      background:rgba(255,45,45,.15); border-color:var(--red); color:var(--red);
+      animation:speakPulse 1s ease-in-out infinite;
+    }
+    .mic-btn svg { width:15px; height:15px; }
+
+    .char-hint { font-size:.7rem; color:var(--text-subtle); text-align:right; margin-top:6px; }
+
+    /* ── Translation output ────────────────────── */
+    .output-section { padding:16px 18px; }
+    .output-top {
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;
+    }
+    .output-label-text { font-size:.72rem; font-weight:600; color:var(--text-subtle); text-transform:uppercase; letter-spacing:.05em; }
+    .translating-badge {
+      display:flex; align-items:center; gap:5px;
+      font-size:.72rem; color:var(--text-muted);
+    }
+    .translating-badge .mini-spin {
+      width:11px; height:11px; border:1.5px solid rgba(255,45,45,.2);
+      border-top-color:var(--red); border-radius:50%; animation:spin .7s linear infinite;
     }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 6px; }
+    #translation-box {
+      background:var(--surface-2); border:1px solid var(--border);
+      border-radius:12px; padding:12px 14px; min-height:100px;
+      font-size:.9rem; line-height:1.65; color:#d4d4d4;
+      white-space:pre-wrap; word-break:break-word;
+    }
+    #translation-box.placeholder { color:var(--text-subtle); font-style:italic; }
+    #translation-box.error-state  { color:#ff6b6b; }
+
+    .copy-trans-btn {
+      display:flex; align-items:center; gap:5px; margin-top:10px;
+      padding:7px 13px; background:var(--surface-2); border:1px solid var(--border);
+      border-radius:10px; color:var(--text-muted); font-family:inherit;
+      font-size:.78rem; font-weight:500; cursor:pointer; transition:all .2s;
+    }
+    .copy-trans-btn:hover { background:var(--surface-3); border-color:var(--border-hover); color:var(--text); }
+    .copy-trans-btn svg { width:12px; height:12px; }
+    .copy-trans-btn.success { border-color:rgba(74,222,128,.35); color:#4ade80; }
+
+    /* ── Scrollbars ────────────────────────────── */
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:6px; }
   </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="hero-badge"><span class="dot"></span>Transcript Viewer</div>
-  <h1>Every word from<br><span>any YouTube video</span></h1>
-  <p>Paste a video link below and get the full spoken transcript in seconds.</p>
+  <div class="hero-badge"><span class="dot"></span>Transcript & Translator</div>
+  <h1>Every word from <span>any YouTube video</span></h1>
+  <p>Fetch transcripts on the left · Type or speak to translate on the right</p>
 </div>
 
-<div class="container">
+<div class="app-layout">
 
-  <!-- Search card -->
-  <div class="search-card">
-    <div class="input-wrap">
-      <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
-        <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
-      </svg>
-      <input type="text" id="url-input" placeholder="Paste a YouTube URL here..." autocomplete="off" />
-      <div class="divider"></div>
-      <button class="fetch-btn" id="fetch-btn" onclick="fetchTranscript()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <polygon points="5 3 19 12 5 21 5 3"/>
+  <!-- ══ LEFT: Transcript viewer ══ -->
+  <div class="left-panel">
+
+    <div class="search-card">
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+          <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
         </svg>
-        Get Transcript
-      </button>
-    </div>
-  </div>
-
-  <!-- Video preview card -->
-  <div id="preview-card" class="preview-card" style="display:none">
-    <div class="preview-thumb-wrap">
-      <img id="preview-thumb" src="" alt="" />
-      <div class="preview-play">
-        <svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.5)"/><polygon points="10 8 16 12 10 16 10 8" fill="white"/></svg>
+        <input type="text" id="url-input" placeholder="Paste a YouTube URL here..." autocomplete="off" />
+        <div class="divider"></div>
+        <button class="fetch-btn" id="fetch-btn" onclick="fetchTranscript()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Get Transcript
+        </button>
       </div>
     </div>
-    <div class="preview-info">
-      <div class="preview-badge">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/></svg>
-        YouTube
-      </div>
-      <div class="preview-title" id="preview-title"></div>
-      <div class="preview-channel" id="preview-channel"></div>
-    </div>
-  </div>
 
-  <!-- Status -->
-  <div class="status-bar" id="status"></div>
-
-  <!-- Result card -->
-  <div id="result-card" class="result-card" style="display:none">
-    <div class="result-header">
-      <div class="result-meta">
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-            <line x1="8" y1="18" x2="21" y2="18"/>
-            <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
-            <line x1="3" y1="18" x2="3.01" y2="18"/>
-          </svg>
-          <span id="line-count">0 lines</span>
-        </div>
-        <div class="meta-pill">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>
-          </svg>
-          <span id="word-count">0 words</span>
+    <div id="preview-card" class="preview-card" style="display:none">
+      <div class="preview-thumb-wrap">
+        <img id="preview-thumb" src="" alt="" />
+        <div class="preview-play">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="rgba(0,0,0,0.5)"/><polygon points="10 8 16 12 10 16 10 8" fill="white"/></svg>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="action-btn" id="read-all-btn" onclick="toggleReadAll(this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-          </svg>
-          Read Aloud
-        </button>
-        <button class="action-btn" id="copy-btn" onclick="copyTranscript()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          Copy
-        </button>
-        <button class="action-btn" id="download-btn" onclick="downloadTranscript()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Download .txt
-        </button>
+      <div class="preview-info">
+        <div class="preview-badge">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/></svg>
+          YouTube
+        </div>
+        <div class="preview-title" id="preview-title"></div>
+        <div class="preview-channel" id="preview-channel"></div>
       </div>
     </div>
 
-    <!-- Inline search -->
-    <div class="search-bar-wrap">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" id="search-input" placeholder="Search within transcript..." oninput="searchTranscript()" />
-      <span class="match-count" id="match-count"></span>
+    <div class="status-bar" id="status"></div>
+
+    <div id="result-card" class="result-card" style="display:none">
+      <div class="result-header">
+        <div class="result-meta">
+          <div class="meta-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span id="line-count">0 lines</span>
+          </div>
+          <div class="meta-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+            <span id="word-count">0 words</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" id="read-all-btn" onclick="toggleReadAll(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            Read Aloud
+          </button>
+          <button class="action-btn" id="copy-btn" onclick="copyTranscript()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+          <button class="action-btn" id="download-btn" onclick="downloadTranscript()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download
+          </button>
+        </div>
+      </div>
+
+      <div class="search-bar-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search within transcript..." oninput="searchTranscript()" />
+        <span class="match-count" id="match-count"></span>
+      </div>
+
+      <div class="transcript-body" id="transcript-body"></div>
     </div>
 
-    <div class="transcript-body" id="transcript-body"></div>
-  </div>
+  </div><!-- /left-panel -->
 
-</div>
+  <!-- ══ RIGHT: Translator ══ -->
+  <div class="right-panel">
+    <div class="translator-card">
+
+      <div class="translator-header">
+        <div class="translator-header-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <h2>Translator</h2>
+        <p>Type or speak · auto-translates</p>
+      </div>
+
+      <!-- Language selectors -->
+      <div class="lang-row">
+        <div class="lang-group">
+          <div class="lang-label">Speak in</div>
+          <select class="lang-select" id="src-lang"></select>
+        </div>
+        <div class="lang-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div class="lang-group">
+          <div class="lang-label">Translate to</div>
+          <select class="lang-select" id="tgt-lang"></select>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="input-section">
+        <div class="input-label">Your text</div>
+        <div class="textarea-wrap">
+          <textarea id="translate-input" placeholder="Type here or click the mic to speak…" oninput="onTranslateInput()"></textarea>
+          <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Click to speak">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+        </div>
+        <div class="char-hint" id="char-hint"></div>
+      </div>
+
+      <!-- Translation output -->
+      <div class="output-section">
+        <div class="output-top">
+          <span class="output-label-text">Translation</span>
+          <div class="translating-badge" id="translating-badge" style="display:none">
+            <div class="mini-spin"></div> translating…
+          </div>
+        </div>
+        <div id="translation-box" class="placeholder">Translation will appear here…</div>
+        <button class="copy-trans-btn" id="copy-trans-btn" onclick="copyTranslation()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy translation
+        </button>
+      </div>
+
+    </div><!-- /translator-card -->
+  </div><!-- /right-panel -->
+
+</div><!-- /app-layout -->
 
 <script>
-  let allLines = [];
-  let previewTimer = null;
-  let lastPreviewUrl = "";
+/* ══════════════════════════════════════════
+   LANGUAGE DATA
+══════════════════════════════════════════ */
+const LANGS = [
+  { name:"English",    bcp47:"en-US", iso:"en" },
+  { name:"Spanish",    bcp47:"es-ES", iso:"es" },
+  { name:"French",     bcp47:"fr-FR", iso:"fr" },
+  { name:"German",     bcp47:"de-DE", iso:"de" },
+  { name:"Italian",    bcp47:"it-IT", iso:"it" },
+  { name:"Portuguese", bcp47:"pt-BR", iso:"pt" },
+  { name:"Chinese",    bcp47:"zh-CN", iso:"zh" },
+  { name:"Japanese",   bcp47:"ja-JP", iso:"ja" },
+  { name:"Korean",     bcp47:"ko-KR", iso:"ko" },
+  { name:"Arabic",     bcp47:"ar-SA", iso:"ar" },
+  { name:"Hindi",      bcp47:"hi-IN", iso:"hi" },
+  { name:"Russian",    bcp47:"ru-RU", iso:"ru" },
+  { name:"Tamil",      bcp47:"ta-IN", iso:"ta" },
+  { name:"Telugu",     bcp47:"te-IN", iso:"te" },
+  { name:"Malayalam",  bcp47:"ml-IN", iso:"ml" },
+];
 
-  /* ── URL input: debounced preview ── */
-  document.getElementById("url-input").addEventListener("input", () => {
-    clearTimeout(previewTimer);
-    const val = document.getElementById("url-input").value.trim();
-    if (!val) { hidePreview(); return; }
-    previewTimer = setTimeout(() => loadPreview(val), 600);
+(function buildSelects() {
+  const srcSel = document.getElementById("src-lang");
+  const tgtSel = document.getElementById("tgt-lang");
+  LANGS.forEach((l, i) => {
+    srcSel.add(new Option(l.name, l.bcp47));
+    tgtSel.add(new Option(l.name, l.iso));
   });
+  tgtSel.value = "es"; // default target: Spanish
+})();
 
-  document.getElementById("url-input").addEventListener("keydown", e => {
-    if (e.key === "Enter") fetchTranscript();
+document.getElementById("src-lang").addEventListener("change", () => {
+  if (isListening) { recognition && recognition.stop(); }
+  triggerTranslate();
+});
+document.getElementById("tgt-lang").addEventListener("change", triggerTranslate);
+
+/* ══════════════════════════════════════════
+   TRANSLATOR
+══════════════════════════════════════════ */
+let translateTimer = null;
+
+function onTranslateInput() {
+  const text = document.getElementById("translate-input").value;
+  document.getElementById("char-hint").textContent = text.length ? `${text.length} chars` : "";
+  triggerTranslate();
+}
+
+function triggerTranslate() {
+  clearTimeout(translateTimer);
+  const text = document.getElementById("translate-input").value.trim();
+  if (!text) { resetOutput(); return; }
+  showTranslating(true);
+  translateTimer = setTimeout(() => doTranslate(text), 600);
+}
+
+async function doTranslate(text) {
+  const srcBcp47 = document.getElementById("src-lang").value;
+  const src = srcBcp47.split("-")[0];                   // "en-US" → "en"
+  const tgt = document.getElementById("tgt-lang").value;
+  try {
+    const res  = await fetch(`/translate?text=${encodeURIComponent(text)}&src=${src}&tgt=${tgt}`);
+    const data = await res.json();
+    showTranslating(false);
+    if (data.error) {
+      setOutputBox(data.error, "error-state");
+    } else {
+      setOutputBox(data.translated, "");
+      document.getElementById("copy-trans-btn").style.display = "flex";
+    }
+  } catch {
+    showTranslating(false);
+    setOutputBox("Network error — is the server running?", "error-state");
+  }
+}
+
+function resetOutput() {
+  showTranslating(false);
+  setOutputBox("Translation will appear here…", "placeholder");
+  document.getElementById("copy-trans-btn").style.display = "none";
+  document.getElementById("char-hint").textContent = "";
+}
+
+function setOutputBox(text, cls) {
+  const box = document.getElementById("translation-box");
+  box.textContent = text;
+  box.className   = cls;
+}
+
+function showTranslating(on) {
+  document.getElementById("translating-badge").style.display = on ? "flex" : "none";
+}
+
+function copyTranslation() {
+  const text = document.getElementById("translation-box").textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById("copy-trans-btn");
+    btn.classList.add("success");
+    btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => {
+      btn.classList.remove("success");
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy translation`;
+    }, 2000);
   });
+}
 
-  /* ── Video preview ── */
-  async function loadPreview(url) {
-    if (url === lastPreviewUrl) return;
-    lastPreviewUrl = url;
+/* ══════════════════════════════════════════
+   SPEECH RECOGNITION (MIC)
+══════════════════════════════════════════ */
+let recognition = null;
+let isListening  = false;
 
-    const card = document.getElementById("preview-card");
-    const titleEl = document.getElementById("preview-title");
-    const channelEl = document.getElementById("preview-channel");
-    const thumbEl = document.getElementById("preview-thumb");
+function toggleMic() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
+    return;
+  }
+  if (isListening) { recognition.stop(); return; }
 
-    // skeleton while loading
-    card.style.display = "flex";
-    card.classList.add("preview-skeleton");
-    titleEl.textContent = "Loading…";
-    channelEl.textContent = "…";
-    thumbEl.src = "";
+  recognition = new SpeechRecognition();
+  recognition.lang = document.getElementById("src-lang").value;
+  recognition.continuous = true;
+  recognition.interimResults = true;
 
-    try {
-      const res = await fetch("/video-info?url=" + encodeURIComponent(url));
-      const data = await res.json();
-      if (data.error) { hidePreview(); return; }
-      thumbEl.src = data.thumbnail;
-      titleEl.textContent = data.title;
-      channelEl.textContent = data.channel;
-      card.classList.remove("preview-skeleton");
-    } catch {
-      hidePreview();
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById("mic-btn").classList.add("listening");
+  };
+
+  recognition.onresult = (e) => {
+    let final = "", interim = "";
+    for (let i = 0; i < e.results.length; i++) {
+      e.results[i].isFinal ? (final += e.results[i][0].transcript) : (interim += e.results[i][0].transcript);
     }
+    const text = final || interim;
+    document.getElementById("translate-input").value = text;
+    document.getElementById("char-hint").textContent = text.length ? `${text.length} chars` : "";
+    clearTimeout(translateTimer);
+    if (final) translateTimer = setTimeout(() => doTranslate(final.trim()), 400);
+    else showTranslating(true);
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    document.getElementById("mic-btn").classList.remove("listening");
+    const text = document.getElementById("translate-input").value.trim();
+    if (text) doTranslate(text);
+  };
+
+  recognition.onerror = (e) => {
+    isListening = false;
+    document.getElementById("mic-btn").classList.remove("listening");
+    if (e.error !== "no-speech" && e.error !== "aborted")
+      setOutputBox(`Mic error: ${e.error}`, "error-state");
+  };
+
+  recognition.start();
+}
+
+/* ══════════════════════════════════════════
+   TRANSCRIPT: URL PREVIEW
+══════════════════════════════════════════ */
+let previewTimer  = null;
+let lastPreviewUrl = "";
+
+document.getElementById("url-input").addEventListener("input", () => {
+  clearTimeout(previewTimer);
+  const val = document.getElementById("url-input").value.trim();
+  if (!val) { hidePreview(); return; }
+  previewTimer = setTimeout(() => loadPreview(val), 600);
+});
+document.getElementById("url-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") fetchTranscript();
+});
+
+async function loadPreview(url) {
+  if (url === lastPreviewUrl) return;
+  lastPreviewUrl = url;
+  const card = document.getElementById("preview-card");
+  const titleEl = document.getElementById("preview-title");
+  const channelEl = document.getElementById("preview-channel");
+  const thumbEl  = document.getElementById("preview-thumb");
+  card.style.display = "flex";
+  card.classList.add("preview-skeleton");
+  titleEl.textContent = "Loading…"; channelEl.textContent = "…"; thumbEl.src = "";
+  try {
+    const res  = await fetch("/video-info?url=" + encodeURIComponent(url));
+    const data = await res.json();
+    if (data.error) { hidePreview(); return; }
+    thumbEl.src = data.thumbnail;
+    titleEl.textContent = data.title;
+    channelEl.textContent = data.channel;
+    card.classList.remove("preview-skeleton");
+  } catch { hidePreview(); }
+}
+
+function hidePreview() {
+  lastPreviewUrl = "";
+  document.getElementById("preview-card").style.display = "none";
+}
+
+/* ══════════════════════════════════════════
+   TRANSCRIPT: FETCH & RENDER
+══════════════════════════════════════════ */
+let allLines = [];
+
+async function fetchTranscript() {
+  const url = document.getElementById("url-input").value.trim();
+  const btn = document.getElementById("fetch-btn");
+  if (!url) { setStatus("Please enter a YouTube URL.", "error"); return; }
+  btn.disabled = true;
+  document.getElementById("result-card").style.display = "none";
+  document.getElementById("search-input").value = "";
+  setStatus("Fetching transcript…", "loading");
+  try {
+    const res  = await fetch("/transcript?url=" + encodeURIComponent(url));
+    const data = await res.json();
+    data.error ? setStatus(data.error, "error") : (renderTranscript(data.transcript), setStatus("", ""));
+  } catch { setStatus("Network error — is the server running?", "error"); }
+  finally { btn.disabled = false; }
+}
+
+function renderTranscript(lines) {
+  allLines = lines;
+  const body      = document.getElementById("transcript-body");
+  const wordCount = lines.join(" ").split(/\s+/).filter(Boolean).length;
+  body.innerHTML  = lines.map((line, i) =>
+    `<div class="transcript-line" data-idx="${i}">
+      <span class="line-num">${i + 1}</span>
+      <span class="line-text">${escHtml(line)}</span>
+      <button class="speak-btn" onclick="speakLine(${i},this)" title="Read aloud">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        </svg>
+      </button>
+    </div>`
+  ).join("");
+  document.getElementById("line-count").textContent  = lines.length.toLocaleString() + " line" + (lines.length !== 1 ? "s" : "");
+  document.getElementById("word-count").textContent  = wordCount.toLocaleString() + " word" + (wordCount !== 1 ? "s" : "");
+  document.getElementById("match-count").textContent = "";
+  document.getElementById("result-card").style.display = "block";
+}
+
+/* ══════════════════════════════════════════
+   TRANSCRIPT: SEARCH
+══════════════════════════════════════════ */
+function searchTranscript() {
+  const query   = document.getElementById("search-input").value.trim();
+  const lineEls = document.querySelectorAll(".transcript-line");
+  const countEl = document.getElementById("match-count");
+  if (!query) {
+    lineEls.forEach((el, i) => { el.classList.remove("dimmed"); el.querySelector(".line-text").innerHTML = escHtml(allLines[i]); });
+    countEl.textContent = ""; countEl.className = "match-count"; return;
   }
-
-  function hidePreview() {
-    lastPreviewUrl = "";
-    document.getElementById("preview-card").style.display = "none";
-  }
-
-  /* ── Fetch transcript ── */
-  async function fetchTranscript() {
-    const url = document.getElementById("url-input").value.trim();
-    const btn = document.getElementById("fetch-btn");
-
-    if (!url) { setStatus("Please enter a YouTube URL.", "error"); return; }
-
-    btn.disabled = true;
-    document.getElementById("result-card").style.display = "none";
-    document.getElementById("search-input").value = "";
-    setStatus("Fetching transcript…", "loading");
-
-    try {
-      const res = await fetch("/transcript?url=" + encodeURIComponent(url));
-      const data = await res.json();
-      if (data.error) {
-        setStatus(data.error, "error");
-      } else {
-        renderTranscript(data.transcript);
-        setStatus("", "");
-      }
-    } catch {
-      setStatus("Network error — is the server running?", "error");
-    } finally {
-      btn.disabled = false;
+  let matches = 0;
+  lineEls.forEach((el, i) => {
+    const text = allLines[i];
+    if (text.toLowerCase().includes(query.toLowerCase())) {
+      matches++;
+      el.classList.remove("dimmed");
+      el.querySelector(".line-text").innerHTML = highlightText(text, query);
+    } else {
+      el.classList.add("dimmed");
+      el.querySelector(".line-text").innerHTML = escHtml(text);
     }
-  }
+  });
+  countEl.textContent = matches ? `${matches} match${matches !== 1 ? "es" : ""}` : "No matches";
+  countEl.className   = "match-count" + (matches ? " has-results" : "");
+  const first = document.querySelector(".transcript-line:not(.dimmed)");
+  if (first) first.scrollIntoView({ block:"nearest", behavior:"smooth" });
+}
 
-  /* ── Render transcript ── */
-  function renderTranscript(lines) {
-    allLines = lines;
-    const body = document.getElementById("transcript-body");
-    const wordCount = lines.join(" ").split(/\s+/).filter(Boolean).length;
+/* ══════════════════════════════════════════
+   TRANSCRIPT: COPY / DOWNLOAD
+══════════════════════════════════════════ */
+function copyTranscript() {
+  navigator.clipboard.writeText(allLines.join("\n")).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.classList.add("success");
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    setTimeout(() => { btn.classList.remove("success"); btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`; }, 2000);
+  });
+}
 
-    body.innerHTML = lines.map((line, i) =>
-      `<div class="transcript-line" data-idx="${i}">
-        <span class="line-num">${i + 1}</span>
-        <span class="line-text">${escHtml(line)}</span>
-        <button class="speak-btn" onclick="speakLine(${i}, this)" title="Read aloud">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            <path class="wave2" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-          </svg>
-        </button>
-      </div>`
-    ).join("");
+function downloadTranscript() {
+  const title = document.getElementById("preview-title").textContent || "transcript";
+  const safe  = title.replace(/[^a-z0-9 _-]/gi,"").trim().replace(/\s+/g,"_") || "transcript";
+  const blob  = new Blob([allLines.join("\n")], { type:"text/plain" });
+  const a     = Object.assign(document.createElement("a"), { href:URL.createObjectURL(blob), download:safe+".txt" });
+  a.click(); URL.revokeObjectURL(a.href);
+}
 
-    document.getElementById("line-count").textContent =
-      lines.length.toLocaleString() + " line" + (lines.length !== 1 ? "s" : "");
-    document.getElementById("word-count").textContent =
-      wordCount.toLocaleString() + " word" + (wordCount !== 1 ? "s" : "");
-    document.getElementById("match-count").textContent = "";
+/* ══════════════════════════════════════════
+   TRANSCRIPT: READ ALOUD
+══════════════════════════════════════════ */
+let readAllActive = false;
+let readAllIndex  = 0;
 
-    document.getElementById("result-card").style.display = "block";
-  }
+function toggleReadAll(btn) {
+  if (readAllActive) { stopReadAll(); return; }
+  window.speechSynthesis.cancel();
+  readAllActive = true; readAllIndex = 0;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop`;
+  btn.classList.add("reading");
+  readNext();
+}
 
-  /* ── Search ── */
-  function searchTranscript() {
-    const query = document.getElementById("search-input").value.trim();
-    const lineEls = document.querySelectorAll(".transcript-line");
-    const countEl = document.getElementById("match-count");
+function readNext() {
+  if (!readAllActive || readAllIndex >= allLines.length) { stopReadAll(); return; }
+  document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
+  const lineEl = document.querySelector(`.transcript-line[data-idx="${readAllIndex}"]`);
+  if (lineEl) { lineEl.classList.add("active-line"); lineEl.scrollIntoView({ block:"nearest", behavior:"smooth" }); }
+  const u = new SpeechSynthesisUtterance(allLines[readAllIndex]);
+  u.onend   = () => { readAllIndex++; readNext(); };
+  u.onerror = () => stopReadAll();
+  window.speechSynthesis.speak(u);
+}
 
-    if (!query) {
-      lineEls.forEach((el, i) => {
-        el.classList.remove("dimmed");
-        el.querySelector(".line-text").innerHTML = escHtml(allLines[i]);
-      });
-      countEl.textContent = "";
-      countEl.className = "match-count";
-      return;
-    }
+function stopReadAll() {
+  readAllActive = false; window.speechSynthesis.cancel();
+  document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
+  const btn = document.getElementById("read-all-btn");
+  if (btn) { btn.classList.remove("reading"); btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> Read Aloud`; }
+}
 
-    let matches = 0;
-    lineEls.forEach((el, i) => {
-      const text = allLines[i];
-      if (text.toLowerCase().includes(query.toLowerCase())) {
-        matches++;
-        el.classList.remove("dimmed");
-        el.querySelector(".line-text").innerHTML = highlightText(text, query);
-      } else {
-        el.classList.add("dimmed");
-        el.querySelector(".line-text").innerHTML = escHtml(text);
-      }
-    });
+/* ══════════════════════════════════════════
+   TRANSCRIPT: PER-LINE SPEAK
+══════════════════════════════════════════ */
+let activeSpeakBtn = null;
 
-    countEl.textContent = matches ? `${matches} match${matches !== 1 ? "es" : ""}` : "No matches";
-    countEl.className = "match-count" + (matches ? " has-results" : "");
+function speakLine(idx, btn) {
+  stopReadAll(); window.speechSynthesis.cancel();
+  if (activeSpeakBtn === btn) { btn.classList.remove("speaking"); btn.closest(".transcript-line").classList.remove("active-line"); activeSpeakBtn = null; return; }
+  if (activeSpeakBtn) { activeSpeakBtn.classList.remove("speaking"); activeSpeakBtn.closest(".transcript-line").classList.remove("active-line"); }
+  const line = btn.closest(".transcript-line");
+  btn.classList.add("speaking"); line.classList.add("active-line"); activeSpeakBtn = btn;
+  const u = new SpeechSynthesisUtterance(allLines[idx]);
+  u.onend = u.onerror = () => { btn.classList.remove("speaking"); line.classList.remove("active-line"); if (activeSpeakBtn === btn) activeSpeakBtn = null; };
+  window.speechSynthesis.speak(u);
+}
 
-    // scroll to first match
-    const first = document.querySelector(".transcript-line:not(.dimmed)");
-    if (first) first.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
+/* ══════════════════════════════════════════
+   STATUS
+══════════════════════════════════════════ */
+function setStatus(msg, type) {
+  const el = document.getElementById("status");
+  if (!msg) { el.innerHTML = ""; el.className = "status-bar"; return; }
+  el.innerHTML = (type === "loading" ? `<div class="spinner"></div>` : "") + `<span>${escHtml(msg)}</span>`;
+  el.className = "status-bar " + type;
+}
 
-  /* ── Copy ── */
-  function copyTranscript() {
-    navigator.clipboard.writeText(allLines.join("\n")).then(() => {
-      const btn = document.getElementById("copy-btn");
-      btn.classList.add("success");
-      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
-      setTimeout(() => {
-        btn.classList.remove("success");
-        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
-      }, 2000);
-    });
-  }
-
-  /* ── Download ── */
-  function downloadTranscript() {
-    const title = document.getElementById("preview-title").textContent || "transcript";
-    const safe = title.replace(/[^a-z0-9 _-]/gi, "").trim().replace(/\s+/g, "_") || "transcript";
-    const blob = new Blob([allLines.join("\n")], { type: "text/plain" });
-    const a = Object.assign(document.createElement("a"), {
-      href: URL.createObjectURL(blob),
-      download: safe + ".txt"
-    });
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
-  /* ── Read Aloud (full transcript) ── */
-  let readAllActive = false;
-  let readAllIndex = 0;
-
-  function toggleReadAll(btn) {
-    if (readAllActive) { stopReadAll(); return; }
-    window.speechSynthesis.cancel();
-    readAllActive = true;
-    readAllIndex = 0;
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop`;
-    btn.classList.add("reading");
-    readNext();
-  }
-
-  function readNext() {
-    if (!readAllActive || readAllIndex >= allLines.length) { stopReadAll(); return; }
-
-    document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
-    const lineEl = document.querySelector(`.transcript-line[data-idx="${readAllIndex}"]`);
-    if (lineEl) {
-      lineEl.classList.add("active-line");
-      lineEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-
-    const utterance = new SpeechSynthesisUtterance(allLines[readAllIndex]);
-    utterance.onend = () => { readAllIndex++; readNext(); };
-    utterance.onerror = () => stopReadAll();
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function stopReadAll() {
-    readAllActive = false;
-    window.speechSynthesis.cancel();
-    document.querySelectorAll(".transcript-line.active-line").forEach(el => el.classList.remove("active-line"));
-    const btn = document.getElementById("read-all-btn");
-    if (btn) {
-      btn.classList.remove("reading");
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> Read Aloud`;
-    }
-  }
-
-  /* ── Speak single line ── */
-  let activeSpeakBtn = null;
-
-  function speakLine(idx, btn) {
-    stopReadAll();
-    window.speechSynthesis.cancel();
-
-    if (activeSpeakBtn === btn) {
-      btn.classList.remove("speaking");
-      btn.closest(".transcript-line").classList.remove("active-line");
-      activeSpeakBtn = null;
-      return;
-    }
-
-    if (activeSpeakBtn) {
-      activeSpeakBtn.classList.remove("speaking");
-      activeSpeakBtn.closest(".transcript-line").classList.remove("active-line");
-    }
-
-    const line = btn.closest(".transcript-line");
-    btn.classList.add("speaking");
-    line.classList.add("active-line");
-    activeSpeakBtn = btn;
-
-    const utterance = new SpeechSynthesisUtterance(allLines[idx]);
-    utterance.onend = utterance.onerror = () => {
-      btn.classList.remove("speaking");
-      line.classList.remove("active-line");
-      if (activeSpeakBtn === btn) activeSpeakBtn = null;
-    };
-    window.speechSynthesis.speak(utterance);
-  }
-
-  /* ── Helpers ── */
-  function escHtml(str) {
-    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  }
-
-  function highlightText(text, query) {
-    const parts = text.split(new RegExp(`(${escRegex(query)})`, "gi"));
-    return parts.map(p =>
-      p.toLowerCase() === query.toLowerCase()
-        ? `<mark class="hl">${escHtml(p)}</mark>`
-        : escHtml(p)
-    ).join("");
-  }
-
-  function escRegex(s) {
-    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  function setStatus(msg, type) {
-    const el = document.getElementById("status");
-    if (!msg) { el.innerHTML = ""; el.className = "status-bar"; return; }
-    el.innerHTML = (type === "loading" ? `<div class="spinner"></div>` : "") + `<span>${escHtml(msg)}</span>`;
-    el.className = "status-bar " + type;
-  }
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function highlightText(text, query) {
+  const parts = text.split(new RegExp(`(${escRegex(query)})`, "gi"));
+  return parts.map(p => p.toLowerCase() === query.toLowerCase() ? `<mark class="hl">${escHtml(p)}</mark>` : escHtml(p)).join("");
+}
+function escRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
 </script>
 
 </body>
