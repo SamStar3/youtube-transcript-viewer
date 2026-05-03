@@ -313,15 +313,20 @@
     #translation-box.placeholder { color:var(--text-subtle); font-style:italic; }
     #translation-box.error-state  { color:#ff6b6b; }
 
-    .copy-trans-btn {
-      display:flex; align-items:center; gap:5px; margin-top:10px;
+    .output-actions { display:flex; gap:8px; margin-top:10px; }
+    .copy-trans-btn, .speak-trans-btn {
+      display:flex; align-items:center; gap:5px;
       padding:7px 13px; background:var(--surface-2); border:1px solid var(--border);
       border-radius:10px; color:var(--text-muted); font-family:inherit;
       font-size:.78rem; font-weight:500; cursor:pointer; transition:all .2s;
     }
-    .copy-trans-btn:hover { background:var(--surface-3); border-color:var(--border-hover); color:var(--text); }
-    .copy-trans-btn svg { width:12px; height:12px; }
+    .copy-trans-btn:hover, .speak-trans-btn:hover { background:var(--surface-3); border-color:var(--border-hover); color:var(--text); }
+    .copy-trans-btn svg, .speak-trans-btn svg { width:12px; height:12px; }
     .copy-trans-btn.success { border-color:rgba(74,222,128,.35); color:#4ade80; }
+    .speak-trans-btn.speaking {
+      border-color:rgba(255,45,45,.35); color:var(--red);
+      background:rgba(255,45,45,.08); animation:speakPulse 1s ease-in-out infinite;
+    }
 
     /* ── Scrollbars ────────────────────────────── */
     ::-webkit-scrollbar { width:6px; }
@@ -472,10 +477,20 @@
           </div>
         </div>
         <div id="translation-box" class="placeholder">Translation will appear here…</div>
-        <button class="copy-trans-btn" id="copy-trans-btn" onclick="copyTranslation()" style="display:none">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copy translation
-        </button>
+        <div class="output-actions" id="output-actions" style="display:none">
+          <button class="speak-trans-btn" id="speak-trans-btn" onclick="speakTranslation(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            Listen
+          </button>
+          <button class="copy-trans-btn" id="copy-trans-btn" onclick="copyTranslation()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
       </div>
 
     </div><!-- /translator-card -->
@@ -552,7 +567,7 @@ async function doTranslate(text) {
       setOutputBox(data.error, "error-state");
     } else {
       setOutputBox(data.translated, "");
-      document.getElementById("copy-trans-btn").style.display = "flex";
+      document.getElementById("output-actions").style.display = "flex";
     }
   } catch {
     showTranslating(false);
@@ -563,7 +578,7 @@ async function doTranslate(text) {
 function resetOutput() {
   showTranslating(false);
   setOutputBox("Translation will appear here…", "placeholder");
-  document.getElementById("copy-trans-btn").style.display = "none";
+  document.getElementById("output-actions").style.display = "none";
   document.getElementById("char-hint").textContent = "";
 }
 
@@ -575,6 +590,50 @@ function setOutputBox(text, cls) {
 
 function showTranslating(on) {
   document.getElementById("translating-badge").style.display = on ? "flex" : "none";
+}
+
+const LISTEN_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>`;
+const STOP_ICON  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+
+function speakTranslation(btn) {
+  const text = document.getElementById("translation-box").textContent.trim();
+
+  // stop if already speaking
+  if (btn.classList.contains("speaking")) {
+    window.speechSynthesis.cancel();
+    btn.classList.remove("speaking");
+    btn.innerHTML = LISTEN_ICON + " Listen";
+    return;
+  }
+
+  if (!text) return;
+
+  // cancel any ongoing speech first, then wait for Chrome to settle
+  window.speechSynthesis.cancel();
+
+  const tgtIso  = document.getElementById("tgt-lang").value;
+  const tgtLang = LANGS.find(l => l.iso === tgtIso);
+
+  btn.classList.add("speaking");
+  btn.innerHTML = STOP_ICON + " Stop";
+
+  // Chrome bug: speak() called immediately after cancel() silently fails.
+  // A 150ms gap lets the synthesizer reset before the new utterance queues.
+  setTimeout(() => {
+    // secondary Chrome bug: synthesizer can get stuck in a paused state
+    if (window.speechSynthesis.paused) window.speechSynthesis.resume();
+
+    const u  = new SpeechSynthesisUtterance(text);
+    u.lang   = tgtLang ? tgtLang.bcp47 : tgtIso;
+    u.onend  = () => { btn.classList.remove("speaking"); btn.innerHTML = LISTEN_ICON + " Listen"; };
+    u.onerror = (e) => {
+      // "interrupted" fires when we manually cancel — not a real error
+      if (e.error === "interrupted") return;
+      btn.classList.remove("speaking");
+      btn.innerHTML = LISTEN_ICON + " Listen";
+    };
+    window.speechSynthesis.speak(u);
+  }, 150);
 }
 
 function copyTranslation() {
@@ -593,55 +652,101 @@ function copyTranslation() {
 /* ══════════════════════════════════════════
    SPEECH RECOGNITION (MIC)
 ══════════════════════════════════════════ */
-let recognition = null;
-let isListening  = false;
+let recognition    = null;
+let isListening    = false;
+let fullTranscript = "";
 
 function toggleMic() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
-    return;
-  }
-  if (isListening) { recognition.stop(); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert("Speech recognition requires Chrome or Edge."); return; }
 
-  recognition = new SpeechRecognition();
-  recognition.lang = document.getElementById("src-lang").value;
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.onstart = () => {
-    isListening = true;
-    document.getElementById("mic-btn").classList.add("listening");
-  };
-
-  recognition.onresult = (e) => {
-    let final = "", interim = "";
-    for (let i = 0; i < e.results.length; i++) {
-      e.results[i].isFinal ? (final += e.results[i][0].transcript) : (interim += e.results[i][0].transcript);
-    }
-    const text = final || interim;
-    document.getElementById("translate-input").value = text;
-    document.getElementById("char-hint").textContent = text.length ? `${text.length} chars` : "";
-    clearTimeout(translateTimer);
-    if (final) translateTimer = setTimeout(() => doTranslate(final.trim()), 400);
-    else showTranslating(true);
-  };
-
-  recognition.onend = () => {
+  if (isListening) {
+    // user clicked Stop — set flag first so onend knows not to restart
     isListening = false;
-    document.getElementById("mic-btn").classList.remove("listening");
+    recognition && recognition.abort();
+    stopMicUI();
     const text = document.getElementById("translate-input").value.trim();
     if (text) doTranslate(text);
+    return;
+  }
+
+  fullTranscript = "";
+  isListening    = true;
+  startRecognition(SR);
+}
+
+function startRecognition(SR) {
+  const micBtn = document.getElementById("mic-btn");
+  micBtn.classList.add("listening");
+  document.getElementById("translate-input").placeholder = "Listening… speak now";
+
+  recognition = new (SR || window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang             = document.getElementById("src-lang").value;
+  recognition.continuous       = true;
+  recognition.interimResults   = true;
+  recognition.maxAlternatives  = 1;
+
+  recognition.onresult = (e) => {
+    // use resultIndex so we never re-process old results
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        fullTranscript += e.results[i][0].transcript + " ";
+      }
+    }
+    // build display: committed finals + current interim
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (!e.results[i].isFinal) interim += e.results[i][0].transcript;
+    }
+    const display = (fullTranscript + interim).trim();
+    document.getElementById("translate-input").value = display;
+    document.getElementById("char-hint").textContent = display ? `${display.length} chars` : "";
+    clearTimeout(translateTimer);
+    if (fullTranscript.trim()) {
+      translateTimer = setTimeout(() => doTranslate(fullTranscript.trim()), 600);
+    }
   };
 
   recognition.onerror = (e) => {
+    if (e.error === "aborted") return;          // we triggered this — ignore
+    if (e.error === "no-speech") {              // Chrome timed out, restart silently
+      if (isListening) restartRecognition();
+      return;
+    }
+    // real error — show it and stop
     isListening = false;
-    document.getElementById("mic-btn").classList.remove("listening");
-    if (e.error !== "no-speech" && e.error !== "aborted")
-      setOutputBox(`Mic error: ${e.error}`, "error-state");
+    stopMicUI();
+    setOutputBox(`Mic error: ${e.error}. Make sure microphone permission is allowed.`, "error-state");
   };
 
-  recognition.start();
+  recognition.onend = () => {
+    // Chrome ends the session after silence or ~60s — restart if user hasn't stopped
+    if (isListening) {
+      restartRecognition();
+    } else {
+      stopMicUI();
+    }
+  };
+
+  try { recognition.start(); }
+  catch (err) {
+    isListening = false;
+    stopMicUI();
+    setOutputBox(`Could not start mic: ${err.message}`, "error-state");
+  }
+}
+
+function restartRecognition() {
+  try {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = null;
+    setTimeout(() => { if (isListening) startRecognition(SR); }, 100);
+  } catch(e) { /* ignore */ }
+}
+
+function stopMicUI() {
+  document.getElementById("mic-btn").classList.remove("listening");
+  document.getElementById("translate-input").placeholder = "Type here or click the mic to speak…";
 }
 
 /* ══════════════════════════════════════════
