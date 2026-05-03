@@ -81,6 +81,11 @@ def translate():
             timeout=8
         ).json()
         translated = resp["responseData"]["translatedText"]
+        if translated.upper().startswith("MYMEMORY WARNING"):
+            return jsonify({"error": "Free translation quota reached for today (5,000 chars). Resets every 24 hours."}), 429
+        status = resp.get("responseStatus", 200)
+        if status not in (200, 206):
+            return jsonify({"error": f"Translation service error (status {status}). Try again shortly."}), 502
         return jsonify({"translated": translated})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
