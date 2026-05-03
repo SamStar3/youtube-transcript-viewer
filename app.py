@@ -57,7 +57,7 @@ def transcript():
     try:
         api = YouTubeTranscriptApi()
         entries = api.fetch(video_id)
-        lines = [snippet.text for snippet in entries]
+        lines = [{"text": snippet.text, "start": round(snippet.start, 2)} for snippet in entries]
         return jsonify({"transcript": lines})
     except TranscriptsDisabled:
         return jsonify({"error": "Transcripts are disabled for this video."}), 404
